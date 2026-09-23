@@ -16,6 +16,11 @@
     "wake_model": "hey jarvis",
     "wake_threshold": 0.5,
     "whisper_model": "small",
-    "language": "pt"
+    "language": "pt",
+    "tts_provider": "piper",
+    "tts_piper_voice": "pt_BR-faber-medium",
+    "tts_voice": "pt-BR-AntonioNeural",
+    "tts_rate": "-5%",
+    "tts_pitch": "-10Hz"
   }
 }

@@ -34,6 +34,11 @@ def _initial_config() -> dict:
             "wake_threshold": 0.5,
             "whisper_model": "small",
             "language": "pt",
+            "tts_provider": "piper",
+            "tts_piper_voice": "pt_BR-faber-medium",
+            "tts_voice": "pt-BR-AntonioNeural",
+            "tts_rate": "-5%",
+            "tts_pitch": "-10Hz",
         },
     }
 
@@ -128,6 +133,8 @@ def main(argv: list[str] | None = None) -> int:
     ask = sub.add_parser("ask", help="executa um pedido por texto")
     ask.add_argument("prompt", nargs="+")
     sub.add_parser("voice", help="ativa microfone, wake word, STT e TTS")
+    preview = sub.add_parser("voice-preview", help="reproduz uma frase para testar a voz")
+    preview.add_argument("text", nargs="*", help="frase de teste")
     sub.add_parser("tools", help="lista ferramentas disponíveis")
     data = sub.add_parser("data", help="configura e administra dados e memória")
     data_sub = data.add_subparsers(dest="data_action", required=True)
@@ -163,6 +170,13 @@ def main(argv: list[str] | None = None) -> int:
             print(name)
         return 0
     try:
+        if args.command == "voice-preview":
+            from jarvis.speech import make_speaker
+
+            settings = load_settings(args.config)
+            phrase = " ".join(args.text) or "Às suas ordens. Sistemas operacionais prontos."
+            make_speaker(settings.voice).speak(phrase)
+            return 0
         if args.command == "data":
             return _data_command(args)
         core = _core(args.config)

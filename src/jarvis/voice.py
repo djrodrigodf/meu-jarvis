@@ -10,6 +10,7 @@ from typing import Any
 
 from jarvis.config import VoiceSettings
 from jarvis.core import Core
+from jarvis.speech import make_speaker
 
 SAMPLE_RATE = 16000
 CHUNK = 1280  # 80 ms, as expected by openWakeWord.
@@ -24,7 +25,6 @@ class VoiceLoop:
         try:
             import numpy as np
             import openwakeword
-            import pyttsx3
             import sounddevice as sd
             from faster_whisper import WhisperModel
             from openwakeword.model import Model
@@ -37,7 +37,7 @@ class VoiceLoop:
         openwakeword.utils.download_models(model_names=[settings.wake_model.replace(" ", "_")])
         self.wake = Model(wakeword_models=[settings.wake_model], inference_framework="onnx")
         self.whisper = WhisperModel(settings.whisper_model, device="cpu", compute_type="int8")
-        self.tts = pyttsx3.init()
+        self.speaker = make_speaker(settings)
 
     def _read_frame(self, stream: Any) -> Any:
         data, overflowed = stream.read(CHUNK)
@@ -112,7 +112,6 @@ class VoiceLoop:
                     print(f"Você: {prompt}")
                     answer = self.core.handle(prompt)
                     print(f"JARVIS: {answer}")
-                    self.tts.say(answer)
-                    self.tts.runAndWait()
+                    self.speaker.speak(answer)
                 finally:
                     stream.start()

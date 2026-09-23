@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
@@ -31,6 +32,11 @@ class VoiceSettings:
     wake_threshold: float = 0.5
     whisper_model: str = "small"
     language: str = "pt"
+    tts_provider: str = "piper"
+    tts_piper_voice: str = "pt_BR-faber-medium"
+    tts_voice: str = "pt-BR-AntonioNeural"
+    tts_rate: str = "-5%"
+    tts_pitch: str = "-10Hz"
 
 
 @dataclass(frozen=True)
@@ -95,11 +101,35 @@ def load_settings(path: Path | None = None) -> Settings:
         or not 0 < threshold <= 1
     ):
         raise ValueError("'voice.wake_threshold' deve estar entre 0 e 1.")
+    tts_provider = voice_raw.get("tts_provider", "piper")
+    if tts_provider not in {"system", "piper", "edge"}:
+        raise ValueError("'voice.tts_provider' deve ser system, piper ou edge.")
+    tts_piper_voice = _string(
+        voice_raw.get("tts_piper_voice", "pt_BR-faber-medium"), "voice.tts_piper_voice"
+    )
+    if tts_piper_voice not in {"en_GB-alan-medium", "pt_BR-faber-medium"}:
+        raise ValueError(
+            "'voice.tts_piper_voice' deve ser en_GB-alan-medium ou pt_BR-faber-medium."
+        )
+    tts_voice = _string(voice_raw.get("tts_voice", "pt-BR-AntonioNeural"), "voice.tts_voice")
+    if not re.fullmatch(r"[a-z]{2}-[A-Z]{2}-[A-Za-z]+Neural", tts_voice):
+        raise ValueError("'voice.tts_voice' deve ser um nome de voz neural válido.")
+    tts_rate = _string(voice_raw.get("tts_rate", "-5%"), "voice.tts_rate")
+    tts_pitch = _string(voice_raw.get("tts_pitch", "-10Hz"), "voice.tts_pitch")
+    if not re.fullmatch(r"[+-](?:[0-4]?\d|50)%", tts_rate):
+        raise ValueError("'voice.tts_rate' deve estar entre -50% e +50%.")
+    if not re.fullmatch(r"[+-](?:[0-4]?\d|50)Hz", tts_pitch):
+        raise ValueError("'voice.tts_pitch' deve estar entre -50Hz e +50Hz.")
     voice = VoiceSettings(
         wake_model=_string(voice_raw.get("wake_model", "hey jarvis"), "voice.wake_model"),
         wake_threshold=float(threshold),
         whisper_model=_string(voice_raw.get("whisper_model", "small"), "voice.whisper_model"),
         language=_string(voice_raw.get("language", "pt"), "voice.language"),
+        tts_provider=tts_provider,
+        tts_piper_voice=tts_piper_voice,
+        tts_voice=tts_voice,
+        tts_rate=tts_rate,
+        tts_pitch=tts_pitch,
     )
     return Settings(
         provider=provider,

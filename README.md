@@ -17,7 +17,7 @@ Pré-requisitos: Python 3.13 ou 3.14, Git e, para a memória completa, Docker De
 ```powershell
 py -3.13 -m venv .venv
 .\.venv\Scripts\Activate.ps1
-python -m pip install -e ".[voice,windows,openai,anthropic,memory,dev]"
+python -m pip install -e ".[voice,piper,windows,openai,anthropic,memory,dev]"
 jarvis init
 jarvis chat
 ```
@@ -35,6 +35,12 @@ Para uma instalação fora do checkout, crie o ambiente em `%LOCALAPPDATA%\Jarvi
 
 O modo de voz inicia com `jarvis voice`. Ele baixa os modelos locais na primeira execução. O modelo público de ativação reconhece **“Hey Jarvis”**; apenas “Jarvis” pode funcionar com menor confiabilidade. Depois da ativação, fale o pedido. Confirmações de ações de nível 2 são digitadas no terminal como `sim`.
 
+### Voz de resposta
+
+O padrão é o Piper local com `pt_BR-faber-medium`, uma voz masculina que pronuncia português brasileiro. Use `jarvis voice-preview` para ouvi-la sem abrir o microfone. O [projeto de referência](https://github.com/isair/jarvis/blob/main/docs/CONFIGURATION.md) usa a voz britânica `en_GB-alan-medium`; ela também está disponível em `voice.tts_piper_voice`, mas foi treinada em inglês e pronuncia português incorretamente. Os modelos Piper são baixados na primeira fala e depois funcionam sem rede.
+
+Como opção, instale `pip install -e ".[neural]"` e defina `voice.tts_provider` como `edge` para usar `pt-BR-AntonioNeural`; esse backend envia o texto das respostas para a síntese online. `voice.tts_provider: system` mantém a voz instalada no Windows. Piper e Edge usam a voz do Windows como alternativa caso falhem.
+
 ## Fluxo
 
 ```text
@@ -42,7 +48,7 @@ Wake word → transcrição → interpretação → política de permissões
           → ferramentas locais → resposta → síntese de voz
 ```
 
-O núcleo separa a interpretação da execução. Pedidos simples são resolvidos pelo roteador local. Para usar IA, altere `provider` para `openai` ou `anthropic`, informe `model` com um modelo disponível na sua conta e defina `OPENAI_API_KEY` ou `ANTHROPIC_API_KEY` no ambiente. O pedido, resultados das ferramentas e, quando relevante, trechos recuperados da memória são enviados ao provedor. O modelo recebe ferramentas registradas com argumentos validados; ele não ganha acesso a um shell genérico.
+O núcleo separa a interpretação da execução. Pedidos simples são resolvidos pelo roteador local. Para usar IA, altere `provider` para `openai` ou `anthropic`, informe `model` com um modelo disponível na sua conta e defina `OPENAI_API_KEY` ou `ANTHROPIC_API_KEY` no ambiente. No Windows, [`scripts/Set-ClaudeKey.ps1`](scripts/Set-ClaudeKey.ps1) guarda a chave Claude com DPAPI e o iniciador a carrega no processo; execute o script em um terminal Windows para cadastrá-la. O pedido, resultados das ferramentas e, quando relevante, trechos recuperados da memória são enviados ao provedor. O modelo recebe ferramentas registradas com argumentos validados; ele não ganha acesso a um shell genérico.
 
 ## Ferramentas da v0.1
 
@@ -83,4 +89,4 @@ Rode `python -m pytest`, `ruff check .` e `ruff format --check .` antes de envia
 
 ## Desenvolvimento orientado por RFC
 
-Toda funcionalidade ou mudança de arquitetura começa com uma RFC em [`docs/rfcs/`](docs/rfcs/). A [RFC 0001](docs/rfcs/0001-arquitetura-inicial.md) define o núcleo; a [RFC 0002](docs/rfcs/0002-memoria.md) define a memória. Use o [modelo de RFC](docs/rfcs/TEMPLATE.md) nas próximas decisões.
+Toda funcionalidade ou mudança de arquitetura começa com uma RFC em [`docs/rfcs/`](docs/rfcs/). A [RFC 0001](docs/rfcs/0001-arquitetura-inicial.md) define o núcleo; a [RFC 0002](docs/rfcs/0002-memoria.md) define a memória; a [RFC 0003](docs/rfcs/0003-voz-natural.md) define as vozes; e a [RFC 0004](docs/rfcs/0004-credencial-claude.md) registra o armazenamento da chave. Use o [modelo de RFC](docs/rfcs/TEMPLATE.md) nas próximas decisões.

@@ -2,7 +2,7 @@
 
 ## Project Structure & Module Organization
 
-Python source lives in `src/jarvis/`: `core.py` enforces permissions, `tools.py` defines system actions, `llm.py` handles model providers, `voice.py` handles local audio, and `memory.py` integrates data stores. Tests live in `tests/`; design decisions live in `docs/rfcs/`. `compose.yaml` starts optional local data services. Keep credentials and runtime data outside the repository.
+Python source lives in `src/jarvis/`: `core.py` enforces permissions, `tools.py` defines system actions, `llm.py` handles model providers, `voice.py` captures audio, `speech.py` synthesizes speech, and `memory.py` integrates data stores. Tests live in `tests/`; design decisions live in `docs/rfcs/`. `compose.yaml` starts optional local data services. Keep secrets outside the repository.
 
 ## Build, Test, and Development Commands
 
