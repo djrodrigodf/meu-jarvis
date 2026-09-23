@@ -1,0 +1,21 @@
+{
+  "provider": "local",
+  "model": "",
+  "code_command": "code",
+  "apps": {
+    "notepad": "C:\\Windows\\System32\\notepad.exe"
+  },
+  "projects": {
+    "AgenciaFlow": {
+      "path": "C:\\Projetos\\agenciaflow",
+      "compose_file": "compose.yaml"
+    }
+  },
+  "scripts": {},
+  "voice": {
+    "wake_model": "hey jarvis",
+    "wake_threshold": 0.5,
+    "whisper_model": "small",
+    "language": "pt"
+  }
+}
