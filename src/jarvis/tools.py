@@ -8,6 +8,7 @@ import sys
 import webbrowser
 from collections.abc import Callable
 from dataclasses import dataclass
+from datetime import datetime
 from enum import IntEnum
 from pathlib import Path
 from typing import Any
@@ -153,6 +154,17 @@ def _system_status(_settings: Settings, _args: dict[str, Any]) -> dict[str, Any]
     }
 
 
+def _current_time(_settings: Settings, _args: dict[str, Any]) -> dict[str, Any]:
+    now = datetime.now().astimezone()
+    return {
+        "hour": now.hour,
+        "minute": now.minute,
+        "date": now.date().isoformat(),
+        "timezone": now.tzname() or "local",
+        "iso": now.isoformat(timespec="seconds"),
+    }
+
+
 def _processes(_settings: Settings, args: dict[str, Any]) -> dict[str, Any]:
     entries = []
     for process in psutil.process_iter(["pid", "name", "memory_info"]):
@@ -284,6 +296,14 @@ def make_registry() -> ToolRegistry:
     alias = field_string("Nome exato do item cadastrado no config.json", max_length=80)
     return ToolRegistry(
         [
+            ToolSpec(
+                "get_current_time",
+                "Consulta a hora e data atuais do computador",
+                Level.READ,
+                object_schema(),
+                _current_time,
+                lambda _s, _a: "relógio local",
+            ),
             ToolSpec(
                 "get_system_status",
                 "Consulta CPU e uso de memória",

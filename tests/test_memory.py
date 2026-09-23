@@ -1,5 +1,8 @@
+from unittest.mock import Mock
+
 from jarvis.config import Settings
 from jarvis.core import Core, LocalPlanner, Plan
+from jarvis.llm import RoutedPlanner
 from jarvis.memory import LongMemory, MemoryHit, MemoryWorker
 from jarvis.tools import make_registry
 
@@ -91,5 +94,61 @@ def test_llm_receives_relevant_memory_as_data():
     assistant = Core(
         settings, make_registry(), Planner(), lambda _message: False, long_memory=memory
     )
-    assert assistant.handle("Abra o navegador") == "Entendido."
-    assert memory.queries == ["Abra o navegador"]
+    assert assistant.handle("O que decidimos no AgenciaFlow?") == "Entendido."
+    assert memory.queries == ["O que decidimos no AgenciaFlow?"]
+
+
+def test_clock_request_uses_local_time_without_embedding_or_llm():
+    memory = FakeLongMemory()
+    remote = Mock()
+    settings = Settings(provider="anthropic", model="test-model")
+    assistant = Core(
+        settings,
+        make_registry(),
+        RoutedPlanner(settings, remote),
+        lambda _message: False,
+        long_memory=memory,
+    )
+
+    answer = assistant.handle("Jarvis, quantas horas?")
+
+    assert "Agora são" in answer
+    assert "horas" in answer
+    assert memory.queries == []
+    remote.plan.assert_not_called()
+
+
+def test_unrelated_request_does_not_search_long_memory():
+    memory = FakeLongMemory()
+
+    class Planner:
+        def plan(self, prompt, _registry):
+            assert prompt == "Explique o que é CPU."
+            return Plan(text="Processador.")
+
+    settings = Settings(provider="anthropic", model="test-model")
+    assistant = Core(
+        settings, make_registry(), Planner(), lambda _message: False, long_memory=memory
+    )
+
+    assert assistant.handle("Explique o que é CPU.") == "Processador."
+    assert memory.queries == []
+
+
+def test_missing_memory_does_not_invent_an_answer_with_llm():
+    memory = FakeLongMemory()
+    memory.search = Mock(return_value=[])
+    remote = Mock()
+    settings = Settings(provider="anthropic", model="test-model")
+    assistant = Core(
+        settings,
+        make_registry(),
+        RoutedPlanner(settings, remote),
+        lambda _message: False,
+        long_memory=memory,
+    )
+
+    assert assistant.handle("Jarvis, lembra daquela decisão?") == (
+        "Não encontrei memórias relacionadas."
+    )
+    remote.plan.assert_not_called()

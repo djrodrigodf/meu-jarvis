@@ -203,7 +203,10 @@ class LongMemory:
                 raise RuntimeError(
                     "Instale o extra de memória: pip install -e '.[memory]'."
                 ) from exc
-            self.model = SentenceTransformer(EMBEDDING_MODEL)
+            try:
+                self.model = SentenceTransformer(EMBEDDING_MODEL, local_files_only=True)
+            except OSError:
+                self.model = SentenceTransformer(EMBEDDING_MODEL)
         vector = self.model.encode([f"{prefix}: {text}"], normalize_embeddings=True)[0]
         values = vector.tolist()
         if len(values) != 384:

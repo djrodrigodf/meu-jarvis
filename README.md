@@ -50,9 +50,9 @@ Wake word → transcrição → interpretação → política de permissões
 
 O núcleo separa a interpretação da execução. Pedidos simples são resolvidos pelo roteador local. Para usar IA, altere `provider` para `openai` ou `anthropic`, informe `model` com um modelo disponível na sua conta e defina `OPENAI_API_KEY` ou `ANTHROPIC_API_KEY` no ambiente. No Windows, [`scripts/Set-ClaudeKey.ps1`](scripts/Set-ClaudeKey.ps1) guarda a chave Claude com DPAPI e o iniciador a carrega no processo; execute o script em um terminal Windows para cadastrá-la. O pedido, resultados das ferramentas e, quando relevante, trechos recuperados da memória são enviados ao provedor. O modelo recebe ferramentas registradas com argumentos validados; ele não ganha acesso a um shell genérico.
 
-## Ferramentas da v0.1
+## Ferramentas da v0.2
 
-`jarvis tools` lista as dez ferramentas. Elas consultam sistema/processos, abrem aplicativos, URLs e projetos, ajustam volume, procuram arquivos em projetos, iniciam/param Docker Compose e executam scripts PowerShell cadastrados. `run_powershell` aceita apenas um alias de script `.ps1` sem argumentos; não executa texto arbitrário fornecido pelo modelo.
+`jarvis tools` lista as onze ferramentas. Elas consultam hora local, sistema e processos; abrem aplicativos, URLs e projetos; ajustam volume; procuram arquivos em projetos; iniciam/param Docker Compose; e executam scripts PowerShell cadastrados. `run_powershell` aceita apenas um alias de script `.ps1` sem argumentos; não executa texto arbitrário fornecido pelo modelo. “Quantas horas?” e “Que dia é hoje?” usam o relógio local sem chamar IA.
 
 Visão da tela, mouse/teclado, SSH e Home Assistant ficam para RFCs futuras. Capturas de tela nunca devem ser enviadas a um provedor remoto sem ciência do usuário.
 
@@ -81,7 +81,7 @@ jarvis data memory add decision "Projeto obrigatório no orçamento" --project A
 jarvis data memory search "problema com orçamento" --project AgenciaFlow
 ```
 
-`jarvis data catalog add project AgenciaFlow C:\Projetos\agenciaflow --compose-file compose.yaml` cadastra outro projeto. Use `jarvis data memory delete <ID>` para remover um registro. No chat, “lembre que ...” grava um fato e “sempre que eu falar ...” grava uma preferência; perguntas como “lembra daquele problema?” pesquisam o OpenSearch. A primeira execução da busca vetorial baixa o modelo de embeddings.
+`jarvis data catalog add project AgenciaFlow C:\Projetos\agenciaflow --compose-file compose.yaml` cadastra outro projeto. Use `jarvis data memory delete <ID>` para remover um registro. No chat, “lembre que ...” grava um fato e “sempre que eu falar ...” grava uma preferência; perguntas como “lembra daquele problema?” pesquisam o OpenSearch. Pedidos comuns não carregam o modelo de embeddings. A primeira busca vetorial baixa o modelo; depois o cache local é usado antes de qualquer acesso ao Hugging Face Hub.
 
 ## Desenvolvimento e limites
 
@@ -89,4 +89,4 @@ Rode `python -m pytest`, `ruff check .` e `ruff format --check .` antes de envia
 
 ## Desenvolvimento orientado por RFC
 
-Toda funcionalidade ou mudança de arquitetura começa com uma RFC em [`docs/rfcs/`](docs/rfcs/). A [RFC 0001](docs/rfcs/0001-arquitetura-inicial.md) define o núcleo; a [RFC 0002](docs/rfcs/0002-memoria.md) define a memória; a [RFC 0003](docs/rfcs/0003-voz-natural.md) define as vozes; e a [RFC 0004](docs/rfcs/0004-credencial-claude.md) registra o armazenamento da chave. Use o [modelo de RFC](docs/rfcs/TEMPLATE.md) nas próximas decisões.
+Toda funcionalidade ou mudança de arquitetura começa com uma RFC em [`docs/rfcs/`](docs/rfcs/). A [RFC 0001](docs/rfcs/0001-arquitetura-inicial.md) define o núcleo; a [RFC 0002](docs/rfcs/0002-memoria.md) define a memória; a [RFC 0003](docs/rfcs/0003-voz-natural.md) define as vozes; a [RFC 0004](docs/rfcs/0004-credencial-claude.md) registra o armazenamento da chave; e a [RFC 0005](docs/rfcs/0005-hora-e-memoria-sob-demanda.md) define a consulta de hora e memória sob demanda. Use o [modelo de RFC](docs/rfcs/TEMPLATE.md) nas próximas decisões.
