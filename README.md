@@ -33,7 +33,7 @@ Para uma instalação fora do checkout, crie o ambiente em `%LOCALAPPDATA%\Jarvi
 .\scripts\Start-Jarvis.ps1 -Mode voice
 ```
 
-O modo de voz inicia com `jarvis voice`. Ele baixa os modelos locais na primeira execução. O modelo público de ativação reconhece **“Hey Jarvis”**; apenas “Jarvis” pode funcionar com menor confiabilidade. Depois da ativação, fale o pedido. Confirmações de ações de nível 2 são digitadas no terminal como `sim`.
+O modo de voz inicia com `jarvis voice` e abre um painel flutuante com estados de ativação, escuta, transcrição, consulta e resposta. Um sinal curto confirma **“Hey Jarvis”**; apenas “Jarvis” pode funcionar com menor confiabilidade. Depois de cada resposta, a conversa fica aberta por 30 segundos para outra pergunta sem repetir a ativação; perguntas que esperam nome ou cidade têm ao menos 45 segundos. O painel mostra o tempo restante. Ajuste `voice.followup_seconds` (5 a 120) na configuração para mudar a janela normal, ou diga “tchau, Jarvis” para encerrá-la. Os modelos locais são baixados na primeira execução. Feche o painel para encerrar. Use `jarvis voice --no-hud` para diagnóstico só no terminal. Confirmações de ações de nível 2 são digitadas no terminal como `sim`.
 
 ### Voz de resposta
 
@@ -50,9 +50,9 @@ Wake word → transcrição → interpretação → política de permissões
 
 O núcleo separa a interpretação da execução. Pedidos simples são resolvidos pelo roteador local. Para usar IA, altere `provider` para `openai` ou `anthropic`, informe `model` com um modelo disponível na sua conta e defina `OPENAI_API_KEY` ou `ANTHROPIC_API_KEY` no ambiente. No Windows, [`scripts/Set-ClaudeKey.ps1`](scripts/Set-ClaudeKey.ps1) guarda a chave Claude com DPAPI e o iniciador a carrega no processo; execute o script em um terminal Windows para cadastrá-la. O pedido, resultados das ferramentas e, quando relevante, trechos recuperados da memória são enviados ao provedor. O modelo recebe ferramentas registradas com argumentos validados; ele não ganha acesso a um shell genérico.
 
-## Ferramentas da v0.2
+## Ferramentas da v0.3
 
-`jarvis tools` lista as onze ferramentas. Elas consultam hora local, sistema e processos; abrem aplicativos, URLs e projetos; ajustam volume; procuram arquivos em projetos; iniciam/param Docker Compose; e executam scripts PowerShell cadastrados. `run_powershell` aceita apenas um alias de script `.ps1` sem argumentos; não executa texto arbitrário fornecido pelo modelo. “Quantas horas?” e “Que dia é hoje?” usam o relógio local sem chamar IA.
+`jarvis tools` lista as doze ferramentas. Elas consultam hora local, sistema, processos e previsão do tempo; abrem aplicativos, URLs e projetos; ajustam volume; procuram arquivos em projetos; iniciam/param Docker Compose; e executam scripts PowerShell cadastrados. `run_powershell` aceita apenas um alias de script `.ps1` sem argumentos; não executa texto arbitrário fornecido pelo modelo. “Quantas horas?” e “Que dia é hoje?” usam o relógio local sem chamar IA.
 
 Visão da tela, mouse/teclado, SSH e Home Assistant ficam para RFCs futuras. Capturas de tela nunca devem ser enviadas a um provedor remoto sem ciência do usuário.
 
@@ -69,7 +69,11 @@ As permissões são aplicadas pelo núcleo, independentemente da resposta do mod
 
 ## Memória: PostgreSQL, Redis e OpenSearch
 
-O PostgreSQL é a fonte dos aliases estruturados quando `JARVIS_DATABASE_URL` está definido. O Redis guarda até dez interações recentes com expiração de 24 horas. O OpenSearch guarda apenas fatos e registros adicionados explicitamente, com busca híbrida por texto e vetor local. A memória recuperada serve como contexto; somente o núcleo pode autorizar uma ferramenta.
+O PostgreSQL é a fonte dos aliases e do perfil aprendido quando `JARVIS_DATABASE_URL` está definido. Diga “Meu nome é Rodrigo” ou “Moro em Recife”; o JARVIS guarda esses fatos e pode responder “Qual é meu nome?” ou usar a cidade na previsão. Para corrigir, diga o novo nome ou cidade; “Esqueça minha cidade” remove o dado. Se ainda não souber a cidade, ele pergunta e guarda a resposta depois de validá-la na consulta. Uma cidade pedida pontualmente não altera sua cidade de residência. O Redis guarda até dez interações recentes com expiração de 24 horas. O OpenSearch guarda fatos e registros adicionados explicitamente, com busca híbrida por texto e vetor local. A memória recuperada serve como contexto; somente o núcleo pode autorizar uma ferramenta.
+
+Se ele perguntar “Como você se chama?”, basta responder “Rodrigo” durante a janela de conversa; a resposta curta é guardada no PostgreSQL.
+
+Pergunte “Como está o tempo amanhã?” para obter condição, mínima, máxima e chance de chuva pela [Open-Meteo](https://open-meteo.com/en/docs). A consulta envia a cidade ao serviço e não abre o navegador. Para outras informações duradouras, “lembre que ...” continua disponível no OpenSearch; a extração automática do perfil cobre nome e cidade nesta versão.
 
 Para iniciar a infraestrutura local, copie [`infra.env.example`](infra.env.example) para `infra.env`, troque a senha e execute `docker compose --env-file infra.env up -d`. Os serviços escutam somente em `127.0.0.1`. No PowerShell, defina `JARVIS_DATABASE_URL`, `JARVIS_REDIS_URL` e `JARVIS_OPENSEARCH_URL` com os valores do arquivo antes de executar `jarvis data init`. O OpenSearch pode precisar de `vm.max_map_count=262144` no WSL do Docker Desktop; veja a [instrução oficial](https://docs.opensearch.org/latest/install-and-configure/install-opensearch/docker/).
 
@@ -89,4 +93,4 @@ Rode `python -m pytest`, `ruff check .` e `ruff format --check .` antes de envia
 
 ## Desenvolvimento orientado por RFC
 
-Toda funcionalidade ou mudança de arquitetura começa com uma RFC em [`docs/rfcs/`](docs/rfcs/). A [RFC 0001](docs/rfcs/0001-arquitetura-inicial.md) define o núcleo; a [RFC 0002](docs/rfcs/0002-memoria.md) define a memória; a [RFC 0003](docs/rfcs/0003-voz-natural.md) define as vozes; a [RFC 0004](docs/rfcs/0004-credencial-claude.md) registra o armazenamento da chave; e a [RFC 0005](docs/rfcs/0005-hora-e-memoria-sob-demanda.md) define a consulta de hora e memória sob demanda. Use o [modelo de RFC](docs/rfcs/TEMPLATE.md) nas próximas decisões.
+Toda funcionalidade ou mudança de arquitetura começa com uma RFC em [`docs/rfcs/`](docs/rfcs/). As RFCs 0001–0005 cobrem o núcleo, a memória inicial, a voz, a chave Claude e a hora local. A [RFC 0006](docs/rfcs/0006-perfil-e-previsao.md) define o perfil aprendido e a previsão; a [RFC 0007](docs/rfcs/0007-painel-de-voz.md) define o painel; a [RFC 0008](docs/rfcs/0008-janela-de-conversa.md) define a janela de conversa. Use o [modelo de RFC](docs/rfcs/TEMPLATE.md) nas próximas decisões.

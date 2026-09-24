@@ -30,6 +30,7 @@ class Project:
 class VoiceSettings:
     wake_model: str = "hey jarvis"
     wake_threshold: float = 0.5
+    followup_seconds: int = 30
     whisper_model: str = "small"
     language: str = "pt"
     tts_provider: str = "piper"
@@ -101,6 +102,13 @@ def load_settings(path: Path | None = None) -> Settings:
         or not 0 < threshold <= 1
     ):
         raise ValueError("'voice.wake_threshold' deve estar entre 0 e 1.")
+    followup_seconds = voice_raw.get("followup_seconds", 30)
+    if (
+        isinstance(followup_seconds, bool)
+        or not isinstance(followup_seconds, int)
+        or not 5 <= followup_seconds <= 120
+    ):
+        raise ValueError("'voice.followup_seconds' deve estar entre 5 e 120 segundos.")
     tts_provider = voice_raw.get("tts_provider", "piper")
     if tts_provider not in {"system", "piper", "edge"}:
         raise ValueError("'voice.tts_provider' deve ser system, piper ou edge.")
@@ -123,6 +131,7 @@ def load_settings(path: Path | None = None) -> Settings:
     voice = VoiceSettings(
         wake_model=_string(voice_raw.get("wake_model", "hey jarvis"), "voice.wake_model"),
         wake_threshold=float(threshold),
+        followup_seconds=followup_seconds,
         whisper_model=_string(voice_raw.get("whisper_model", "small"), "voice.whisper_model"),
         language=_string(voice_raw.get("language", "pt"), "voice.language"),
         tts_provider=tts_provider,

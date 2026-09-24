@@ -32,6 +32,7 @@ def _initial_config() -> dict:
         "voice": {
             "wake_model": "hey jarvis",
             "wake_threshold": 0.5,
+            "followup_seconds": 30,
             "whisper_model": "small",
             "language": "pt",
             "tts_provider": "piper",
@@ -69,6 +70,7 @@ def _core(config: Path) -> Core:
         AuditLog(settings.data_dir / "actions.jsonl"),
         long_memory=long_from_env(),
         short_memory=short_from_env(),
+        catalog=catalog,
     )
 
 
@@ -132,7 +134,8 @@ def main(argv: list[str] | None = None) -> int:
     sub.add_parser("chat", help="conversa por texto no terminal")
     ask = sub.add_parser("ask", help="executa um pedido por texto")
     ask.add_argument("prompt", nargs="+")
-    sub.add_parser("voice", help="ativa microfone, wake word, STT e TTS")
+    voice = sub.add_parser("voice", help="ativa microfone, wake word, STT e TTS")
+    voice.add_argument("--no-hud", action="store_true", help="usa somente o terminal")
     preview = sub.add_parser("voice-preview", help="reproduz uma frase para testar a voz")
     preview.add_argument("text", nargs="*", help="frase de teste")
     sub.add_parser("tools", help="lista ferramentas disponíveis")
@@ -183,9 +186,14 @@ def main(argv: list[str] | None = None) -> int:
         if args.command == "ask":
             print(core.handle(" ".join(args.prompt)))
         elif args.command == "voice":
-            from jarvis.voice import VoiceLoop
+            if sys.platform == "win32" and not args.no_hud:
+                from jarvis.hud import run_hud
 
-            VoiceLoop(core.settings.voice, core).run()
+                run_hud(core)
+            else:
+                from jarvis.voice import VoiceLoop
+
+                VoiceLoop(core.settings.voice, core).run()
         else:
             print("JARVIS pronto. Digite 'sair' para encerrar.")
             while True:

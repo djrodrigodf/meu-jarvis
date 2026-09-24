@@ -165,6 +165,12 @@ def _current_time(_settings: Settings, _args: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+def _weather(_settings: Settings, args: dict[str, Any]) -> dict[str, Any]:
+    from jarvis.weather import get_weather
+
+    return get_weather(args["location"], args["day"])
+
+
 def _processes(_settings: Settings, args: dict[str, Any]) -> dict[str, Any]:
     entries = []
     for process in psutil.process_iter(["pid", "name", "memory_info"]):
@@ -303,6 +309,17 @@ def make_registry() -> ToolRegistry:
                 object_schema(),
                 _current_time,
                 lambda _s, _a: "relógio local",
+            ),
+            ToolSpec(
+                "get_weather",
+                "Consulta previsão do tempo por cidade; day=0 para hoje, day=1 para amanhã",
+                Level.READ,
+                object_schema(
+                    location=field_string("Cidade, opcionalmente com estado e país", max_length=80),
+                    day=field_integer("0 para hoje, 1 para amanhã", 0, 1),
+                ),
+                _weather,
+                lambda _s, a: a["location"],
             ),
             ToolSpec(
                 "get_system_status",

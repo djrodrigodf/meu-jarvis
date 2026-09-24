@@ -41,7 +41,7 @@ class MemoryHit:
 
 
 class Catalog:
-    """PostgreSQL is the authority for registered app, project and script aliases."""
+    """PostgreSQL is the authority for aliases and stable local user facts."""
 
     def __init__(self, dsn: str) -> None:
         try:
@@ -62,6 +62,36 @@ class Catalog:
                     PRIMARY KEY (kind, name)
                 )
             """)
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS user_profile (
+                    key TEXT PRIMARY KEY,
+                    value TEXT NOT NULL,
+                    updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+                )
+            """)
+
+    def set_profile(self, key: str, value: str) -> None:
+        if key not in {"name", "home_city", "weather_city"} or not value.strip():
+            raise ValueError("Fato de perfil inválido.")
+        with self.psycopg.connect(self.dsn) as conn:
+            conn.execute(
+                """INSERT INTO user_profile (key, value) VALUES (%s, %s)
+                ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value, updated_at = now()""",
+                (key, value.strip()),
+            )
+
+    def get_profile(self, key: str) -> str | None:
+        if key not in {"name", "home_city", "weather_city"}:
+            raise ValueError("Fato de perfil inválido.")
+        with self.psycopg.connect(self.dsn) as conn:
+            row = conn.execute("SELECT value FROM user_profile WHERE key = %s", (key,)).fetchone()
+        return row[0] if row else None
+
+    def delete_profile(self, key: str) -> bool:
+        if key not in {"name", "home_city", "weather_city"}:
+            raise ValueError("Fato de perfil inválido.")
+        with self.psycopg.connect(self.dsn) as conn:
+            return conn.execute("DELETE FROM user_profile WHERE key = %s", (key,)).rowcount > 0
 
     def upsert(self, kind: str, name: str, path: str, compose_file: str | None = None) -> None:
         if kind not in {"app", "project", "script"} or not name.strip() or not path.strip():

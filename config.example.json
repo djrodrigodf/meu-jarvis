@@ -15,6 +15,7 @@
   "voice": {
     "wake_model": "hey jarvis",
     "wake_threshold": 0.5,
+    "followup_seconds": 30,
     "whisper_model": "small",
     "language": "pt",
     "tts_provider": "piper",
