@@ -151,3 +151,35 @@ def test_weather_source_parses_structured_forecast(monkeypatch):
     assert result["condition"] == "chuva"
     assert result["rain_percent"] == 90
     assert result["source"] == "Open-Meteo"
+
+
+def test_known_weather_city_is_recalled_without_repeating_forecast(monkeypatch):
+    store = ProfileStore()
+    weather = Mock(
+        return_value={
+            "city": "Brasília",
+            "region": "Distrito Federal",
+            "day": 0,
+            "condition": "nublado",
+            "min_c": 19,
+            "max_c": 31,
+            "rain_percent": 11,
+            "current_c": 24,
+        }
+    )
+    monkeypatch.setattr("jarvis.weather.get_weather", weather)
+    jarvis = assistant(store)
+
+    assert jarvis.handle("Quem perra do aprovisão do tempo?") == (
+        "Qual cidade devo usar para a previsão?"
+    )
+    assert "Fonte: Open-Meteo" in jarvis.handle("Brasília.")
+    assert store.facts == {"weather_city": "Brasília"}
+    assert "Para a previsão, você me informou Brasília" in jarvis.handle(
+        "Jarvis, de qual cidade eu falo?"
+    )
+    assert "Para previsão, você me informou Brasília" in jarvis.handle("Qual é minha cidade?")
+    assert jarvis.handle("Brasília!") == (
+        "Sim, Brasília está registrada como cidade para previsões."
+    )
+    weather.assert_called_once_with("Brasília", 0)

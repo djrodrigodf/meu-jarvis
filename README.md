@@ -73,6 +73,8 @@ O PostgreSQL é a fonte dos aliases e do perfil aprendido quando `JARVIS_DATABAS
 
 Se ele perguntar “Como você se chama?”, basta responder “Rodrigo” durante a janela de conversa; a resposta curta é guardada no PostgreSQL.
 
+O JARVIS distingue onde você mora da cidade que usou em uma previsão. “De qual cidade eu falei?” consulta esses fatos; dizer apenas “Brasília” depois de ela ter sido registrada confirma o contexto e não repete a previsão. A memória recente contém até dez turnos no Redis por 24 horas. O arquivo `actions.jsonl` guarda apenas horário, ferramenta, nível e resultado da ação, sem falas ou respostas.
+
 Pergunte “Como está o tempo amanhã?” para obter condição, mínima, máxima e chance de chuva pela [Open-Meteo](https://open-meteo.com/en/docs). A consulta envia a cidade ao serviço e não abre o navegador. Para outras informações duradouras, “lembre que ...” continua disponível no OpenSearch; a extração automática do perfil cobre nome e cidade nesta versão.
 
 Para iniciar a infraestrutura local, copie [`infra.env.example`](infra.env.example) para `infra.env`, troque a senha e execute `docker compose --env-file infra.env up -d`. Os serviços escutam somente em `127.0.0.1`. No PowerShell, defina `JARVIS_DATABASE_URL`, `JARVIS_REDIS_URL` e `JARVIS_OPENSEARCH_URL` com os valores do arquivo antes de executar `jarvis data init`. O OpenSearch pode precisar de `vm.max_map_count=262144` no WSL do Docker Desktop; veja a [instrução oficial](https://docs.opensearch.org/latest/install-and-configure/install-opensearch/docker/).
@@ -93,4 +95,4 @@ Rode `python -m pytest`, `ruff check .` e `ruff format --check .` antes de envia
 
 ## Desenvolvimento orientado por RFC
 
-Toda funcionalidade ou mudança de arquitetura começa com uma RFC em [`docs/rfcs/`](docs/rfcs/). As RFCs 0001–0005 cobrem o núcleo, a memória inicial, a voz, a chave Claude e a hora local. A [RFC 0006](docs/rfcs/0006-perfil-e-previsao.md) define o perfil aprendido e a previsão; a [RFC 0007](docs/rfcs/0007-painel-de-voz.md) define o painel; a [RFC 0008](docs/rfcs/0008-janela-de-conversa.md) define a janela de conversa. Use o [modelo de RFC](docs/rfcs/TEMPLATE.md) nas próximas decisões.
+Toda funcionalidade ou mudança de arquitetura começa com uma RFC em [`docs/rfcs/`](docs/rfcs/). As RFCs 0001–0005 cobrem o núcleo, a memória inicial, a voz, a chave Claude e a hora local. A [RFC 0006](docs/rfcs/0006-perfil-e-previsao.md) define o perfil aprendido e a previsão; a [RFC 0007](docs/rfcs/0007-painel-de-voz.md) define o painel; a [RFC 0008](docs/rfcs/0008-janela-de-conversa.md) define a janela de conversa; e a [RFC 0009](docs/rfcs/0009-contexto-de-cidade.md) corrige o contexto de cidade. Use o [modelo de RFC](docs/rfcs/TEMPLATE.md) nas próximas decisões.

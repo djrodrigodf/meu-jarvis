@@ -49,12 +49,15 @@ def weather_request(prompt: str) -> tuple[str | None, int] | None:
     if "temperatura" in normalized and re.search(r"\b(?:cpu|gpu|processador|placa)\b", normalized):
         return None
     if not (
-        re.search(r"\b(?:previsao|clima|temperatura|chuva|chover)\b", normalized)
+        re.search(
+            r"\b(?:previsao|aprovisao|provisao|clima|temperatura|chuva|chover|chove)\b", normalized
+        )
         or re.search(
             r"\b(?:como (?:esta|vai estar) o tempo|que tempo faz|"
             r"tempo (?:hoje|amanha|agora|em)|qual (?:e )?o tempo)\b",
             normalized,
         )
+        or re.search(r"\b(?:qual|como|que|quem)\b.{0,45}\b(?:do|de|o) tempo\b", normalized)
     ):
         return None
     day = 1 if "amanha" in normalized else 0
@@ -82,6 +85,11 @@ def profile_question(prompt: str) -> str | None:
         return "name"
     if re.search(r"\b(?:qual|sabe|lembra)\b.*\b(?:minha cidade|onde moro)\b", normalized):
         return "home_city"
+    if re.search(
+        r"\b(?:qual|que|sabe|lembra)\b.*\bcidade\b.*\b(?:falo|falei|disse|informei|usei|usamos)\b",
+        normalized,
+    ):
+        return "city_context"
     return None
 
 
